@@ -65,9 +65,7 @@ class EstoqueRepository {
       query = { codigo: String(item?.codigo) };
 
       try {
-        return await this.db
-          .collection(collection)
-          .updateMany(query, { $set: item });
+        await this.db.collection(collection).updateMany(query, { $set: item });
       } catch (e) {
         await new Promise((resolve) => setTimeout(resolve, 200));
         console.log(e);
