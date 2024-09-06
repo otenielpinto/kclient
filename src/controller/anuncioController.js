@@ -7,8 +7,13 @@ import { TMongo } from "../infra/mongoClient.js";
 
 //pego os anuncios e envio para komache hub
 async function init() {
+  //sim primeiro preciso receber oque foi processado , tem controle pra saber
+  await AnuncioHubRepository.recebeAnunciosProcessado();
+
   await enviarEstoque();
   await enviarAnunciosPendentes();
+
+  //sim estou repetindo o comando novamente ,
   await AnuncioHubRepository.recebeAnunciosProcessado();
 }
 
