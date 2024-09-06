@@ -6,9 +6,7 @@ import { lib } from "../utils/lib.js";
 import { TMongo } from "../infra/mongoClient.js";
 
 //pego os anuncios e envio para komache hub
-
 async function init() {
-  return;
   await enviarEstoque();
   await enviarAnunciosPendentes();
   await AnuncioHubRepository.recebeAnunciosProcessado();
@@ -20,6 +18,7 @@ async function enviarEstoque() {
     lib.config_id_tenant()
   );
   let rows = await AnuncioHubRepository.getEstoqueByStatus({ status: 0 });
+
   if (!rows || !Array.isArray(rows)) return;
   try {
     await estoqueRepository.updateEstoqueMany(rows);

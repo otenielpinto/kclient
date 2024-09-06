@@ -6,7 +6,12 @@ global.processandoNow = 0;
 
 async function task() {
   global.processandoNow = 1;
+
   //limitar horario de trabalho
+  if ((await lib.isManutencao()) == 1) {
+    console.log("Serviço em manutenção" + +lib.currentDateTimeStr());
+    return;
+  }
 
   //inicializar automaticamente
   await anuncioController.init();
@@ -15,9 +20,8 @@ async function task() {
 }
 
 async function init() {
-  anuncioController.init();
-
-  return;
+  // anuncioController.init();
+  // return;
 
   try {
     let time = process.env.CRON_JOB_TIME || 10; //tempo em minutos

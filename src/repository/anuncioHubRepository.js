@@ -17,16 +17,19 @@ async function getEstoqueByStatus({ status, id_produto }) {
       SELECT
         V.ID ,
         V.CODIGO,
-        A.CODIGO AS COD_ANUNCIO ,
+        A.CODIGO AS CODIGO_ANUNCIO ,
         V.ID_ANUNCIO,
         V.ID_VARIACAO,
         V.ID_ANUNCIO_MKTPLACE ,
         V.ID_VARIANT_MKTPLACE ,
         V.ID_PRODUTO ,
-        V.STATUS ,
+        V.STATUS,
+        P.TAMANHO, 
+        P.GTIN,
         COALESCE( SUM(X.QTD),0)  AS RESERVA
       FROM
         MPK_VARIACAO V
+      LEFT JOIN PRODUTO P ON (P.ID = V.ID_PRODUTO)  
       LEFT JOIN MPK_ANUNCIO A ON (A.ID =V.ID_ANUNCIO)
       LEFT JOIN PRODUTO_RESERVA X ON(X.ID = V.ID_PRODUTO)
       WHERE
@@ -40,25 +43,30 @@ async function getEstoqueByStatus({ status, id_produto }) {
         V.ID_ANUNCIO_MKTPLACE ,
         V.ID_VARIANT_MKTPLACE ,
         V.ID_PRODUTO,
-        V.STATUS
+        V.STATUS,
+        P.TAMANHO,
+        P.GTIN
   )
   SELECT
     E.* ,   
-   COALESCE(SUM(R.estoque),0) - E.RESERVA  AS ESTOQUE
+   COALESCE(SUM(R.ESTOQUE),0) - E.RESERVA  AS ESTOQUE
   FROM
     ESTOQUE E
-  LEFT JOIN PRODUTO_REDE  R ON (R.id = E.ID_PRODUTO)
+  LEFT JOIN PRODUTO_REDE  R ON (R.ID = E.ID_PRODUTO)
   GROUP  BY
-    E.ID ,
+    E.ID,
     E.CODIGO,
-    E.COD_ANUNCIO,
+    E.CODIGO_ANUNCIO,
     E.ID_ANUNCIO,
     E.ID_VARIACAO,
     E.ID_ANUNCIO_MKTPLACE,
     E.ID_VARIANT_MKTPLACE,
     E.ID_PRODUTO,
     E.STATUS,
-    E.RESERVA  
+    E.TAMANHO,
+    E.RESERVA,
+    E.GTIN
+
   `;
 
   let rows = await fb5.executeQuery(cmd_sql, []);
