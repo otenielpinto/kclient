@@ -1,9 +1,9 @@
-var Service = require("node-windows").Service;
+import { Service } from "node-windows";
 
 // Create a new service object
 var svc = new Service({
   name: "KClient Service",
-  description: "Service API HPTTP Win32 NodeJS",
+  description: "Service API HTTP Win32 NodeJS",
   script: "C:\\www\\public\\kclient\\src\\server.js",
   nodeOptions: ["--harmony", "--max_old_space_size=4096"],
   //, workingDirectory: '...'
