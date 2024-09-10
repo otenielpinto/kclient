@@ -9,7 +9,7 @@ async function task() {
 
   //limitar horario de trabalho
   if ((await lib.isManutencao()) == 1) {
-    console.log("Serviço em manutenção" + +lib.currentDateTimeStr());
+    console.log("Serviço em manutenção" + lib.currentDateTimeStr());
     return;
   }
 

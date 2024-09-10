@@ -10,12 +10,15 @@ class EstoqueRepository {
 
   async create(payload) {
     if (!payload?.id_tenant) payload.id_tenant = this.id_tenant;
+    payload.created_at = new Date();
+    payload.updated_at = null;
     const result = await this.db.collection(collection).insertOne(payload);
     return result.insertedId;
   }
 
   async update(id, payload) {
     if (!payload?.id_tenant) payload.id_tenant = this.id_tenant;
+    payload.updated_at = new Date();
     const result = await this.db
       .collection(collection)
       .updateOne(
@@ -63,11 +66,16 @@ class EstoqueRepository {
     let query = {};
     for (let item of items) {
       query = { codigo: String(item?.codigo) };
+      item.id_tenant = this.id_tenant;
+      let body = {
+        ...item,
+        updated_at: new Date(),
+      };
 
       try {
         await this.db
           .collection(collection)
-          .updateMany(query, { $set: item }, { upsert: true });
+          .updateMany(query, { $set: body }, { upsert: true });
       } catch (e) {
         await new Promise((resolve) => setTimeout(resolve, 200));
         console.log(e);
