@@ -4,6 +4,10 @@ import { AnuncioHubRepository } from "../repository/anuncioHubRepository.js";
 import { EstoqueRepository } from "../repository/estoqueRepository.js";
 import { lib } from "../utils/lib.js";
 import { TMongo } from "../infra/mongoClient.js";
+import { TStorage } from "../services/storageService.js";
+import { fbImage } from "../infra/fbImage.js";
+import path from 'path';
+
 
 //pego os anuncios e envio para komache hub
 async function init() {
@@ -27,11 +31,10 @@ async function enviarEstoque() {
   if (!rows || !Array.isArray(rows)) return;
   try {
     await estoqueRepository.updateEstoqueMany(rows);
-  } catch (error) {}
+  } catch (error) { }
 }
 
 //isso aqui pode ser movido para outra camada
-
 async function enviarAnunciosPendentes() {
   const anuncio = new AnuncioRepository(
     await TMongo.connect(),
@@ -56,6 +59,41 @@ async function enviarAnunciosPendentes() {
   }
 }
 
+async function doEnviarImagensProduto(req, res) {
+
+  let items = await enviarImagensProduto(req.body);
+  res.send({ message: "OK", items });
+}
+
+async function sendImageToStorage(id_produto) {
+  let rows = await fbImage.fbImageByIdProduto(id_produto);
+  if (!rows || !Array.isArray(rows)) return;
+  let local_path = path.join(process.cwd(), 'images');
+
+  let position = 1;
+  for (let row of rows) {
+    let filename = String(row.id_produto) + "-" + position++ + ".jpg";
+    fbImage.saveBase64AsJpg(row.imagem_base64, filename).then(
+      (r) => {
+        let fullFileName = path.join(local_path, filename);
+        TStorage.upload(null, fullFileName);
+      }
+    );
+  }
+}
+
+async function enviarImagensProduto(body) {
+  let imagens_externas = body;
+  if (!imagens_externas || !Array.isArray(imagens_externas)) return;
+  let items = [];
+  for (let imagem of imagens_externas) {
+    await sendImageToStorage(imagem.id_produto);
+    items.push({ id_produto: imagem.id_produto });
+  }
+  return items;
+}
+
 export const anuncioController = {
   init,
+  doEnviarImagensProduto
 };
