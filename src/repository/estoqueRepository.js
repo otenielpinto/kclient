@@ -61,6 +61,17 @@ class EstoqueRepository {
     }
   }
 
+  async updateMany(query = {}, fields = {}) {
+    try {
+      return await this.db
+        .collection(collection)
+        .updateMany(query, { $set: fields });
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+
   async updateEstoqueMany(items = []) {
     if (!Array.isArray(items)) return null;
     let query = {};
@@ -77,7 +88,7 @@ class EstoqueRepository {
           .collection(collection)
           .updateMany(query, { $set: body }, { upsert: true });
       } catch (e) {
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 250));
         console.log(e);
       }
     } //for

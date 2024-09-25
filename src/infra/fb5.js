@@ -273,6 +273,30 @@ const getGenId = async (nameGenerator = "") => {
   return result[0].resposta;
 };
 
+
+async function executeBlockSQL(cmd_sql) {
+  let execute_block_sql = `EXECUTE BLOCK
+    AS
+    BEGIN 
+      ${cmd_sql}
+    END
+  `;
+
+  firebird.attach(fb5.dboptions, (err, db) => {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    db.query(execute_block_sql, [], (err, result) => {
+      db.detach();
+      if (err) {
+        console.log(err);
+      }
+    });
+  }); // firebird
+}
+
+
 //USAR O CONCEITO MANY E USAR SQL PURO SEMPRE
 
 export const fb5 = {
@@ -291,4 +315,6 @@ export const fb5 = {
   findById,
   getNextId,
   getGenId,
+
+  executeBlockSQL
 };

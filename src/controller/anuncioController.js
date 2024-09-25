@@ -8,17 +8,20 @@ import { TStorage } from "../services/storageService.js";
 import { fbImage } from "../infra/fbImage.js";
 import path from 'path';
 
+async function obterProcessado() {
+  await AnuncioHubRepository.recebeAnunciosProcessado();
+  await AnuncioHubRepository.recebeEstoqueProcessado();
+}
 
 //pego os anuncios e envio para komache hub
 async function init() {
-  //sim primeiro preciso receber oque foi processado , tem controle pra saber
-  await AnuncioHubRepository.recebeAnunciosProcessado();
+  await obterProcessado();
 
   await enviarEstoque();
   await enviarAnunciosPendentes();
 
-  //sim estou repetindo o comando novamente ,
-  await AnuncioHubRepository.recebeAnunciosProcessado();
+  await obterProcessado();
+
 }
 
 async function enviarEstoque() {
@@ -60,7 +63,6 @@ async function enviarAnunciosPendentes() {
 }
 
 async function doEnviarImagensProduto(req, res) {
-
   let items = await enviarImagensProduto(req.body);
   res.send({ message: "OK", items });
 }
