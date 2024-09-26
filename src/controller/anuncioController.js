@@ -6,7 +6,7 @@ import { lib } from "../utils/lib.js";
 import { TMongo } from "../infra/mongoClient.js";
 import { TStorage } from "../services/storageService.js";
 import { fbImage } from "../infra/fbImage.js";
-import path from 'path';
+import path from "path";
 
 async function obterProcessado() {
   await AnuncioHubRepository.recebeAnunciosProcessado();
@@ -17,11 +17,11 @@ async function obterProcessado() {
 async function init() {
   await obterProcessado();
 
+  await AnuncioHubRepository.updateAnuncioForced();
   await enviarEstoque();
   await enviarAnunciosPendentes();
 
   await obterProcessado();
-
 }
 
 async function enviarEstoque() {
@@ -34,7 +34,7 @@ async function enviarEstoque() {
   if (!rows || !Array.isArray(rows)) return;
   try {
     await estoqueRepository.updateEstoqueMany(rows);
-  } catch (error) { }
+  } catch (error) {}
 }
 
 //isso aqui pode ser movido para outra camada
@@ -57,6 +57,7 @@ async function enviarAnunciosPendentes() {
     if (!rows || !Array.isArray(rows)) return;
 
     for (let row of rows) {
+      //console.log(row?.id);
       await anuncio.update(row?.id, row); // Ganhar velocidade instanciando apenas 1 X
     }
   }
@@ -70,17 +71,15 @@ async function doEnviarImagensProduto(req, res) {
 async function sendImageToStorage(id_produto) {
   let rows = await fbImage.fbImageByIdProduto(id_produto);
   if (!rows || !Array.isArray(rows)) return;
-  let local_path = path.join(process.cwd(), 'images');
+  let local_path = path.join(process.cwd(), "images");
 
   let position = 1;
   for (let row of rows) {
     let filename = String(row.id_produto) + "-" + position++ + ".jpg";
-    fbImage.saveBase64AsJpg(row.imagem_base64, filename).then(
-      (r) => {
-        let fullFileName = path.join(local_path, filename);
-        TStorage.upload(null, fullFileName);
-      }
-    );
+    fbImage.saveBase64AsJpg(row.imagem_base64, filename).then((r) => {
+      let fullFileName = path.join(local_path, filename);
+      TStorage.upload(null, fullFileName);
+    });
   }
 }
 
@@ -97,5 +96,5 @@ async function enviarImagensProduto(body) {
 
 export const anuncioController = {
   init,
-  doEnviarImagensProduto
+  doEnviarImagensProduto,
 };

@@ -9,6 +9,14 @@ let LISTA_OF_CATEGORIAS = [];
 const MAX_CMD_SQL = 100;
 const MAX_RECORDS_LOTE = 300; //quantidade de registros por lote
 
+async function updateAnuncioForced() {
+  let cmd_sql = ` 
+  SELECT * FROM MPK_UPDANUNCIOFORCED
+  `;
+  let rows = await fb5.executeQuery(cmd_sql, []);
+  return rows;
+}
+
 //fiz separado para poder compartilhar esse repositorio
 async function getEstoqueByStatus({ status }) {
   let cmd_sql = ` 
@@ -55,14 +63,14 @@ async function recebeEstoqueProcessado() {
     if (lote.length < MAX_CMD_SQL) continue;
     try {
       await updateEstoqueSQL(lote);
-    } catch (error) { }
+    } catch (error) {}
     lote = [];
   }
 
   try {
     await updateEstoqueSQL(lote);
     lote = [];
-  } catch (error) { }
+  } catch (error) {}
 
   await estoque.updateMany(
     { status: estoqueTypes.processado, id_tenant: lib.config_id_tenant() },
@@ -91,15 +99,14 @@ async function recebeAnunciosProcessado() {
     if (lote.length < MAX_CMD_SQL) continue;
     try {
       await updateAnuncioSQL(lote);
-    } catch (error) { }
+    } catch (error) {}
     lote = [];
   }
 
   try {
     await updateAnuncioSQL(lote);
     lote = [];
-  } catch (error) { }
-
+  } catch (error) {}
 
   await anuncio.updateMany(
     { status: anuncioTypes.processado, id_tenant: lib.config_id_tenant() },
@@ -131,10 +138,10 @@ async function updateEstoqueSQL(items) {
   await fb5.executeBlockSQL(cmd_sql);
 }
 
-
 export const AnuncioHubRepository = {
   getEstoqueByStatus,
   getAnuncios,
+  updateAnuncioForced,
   recebeAnunciosProcessado,
-  recebeEstoqueProcessado
+  recebeEstoqueProcessado,
 };

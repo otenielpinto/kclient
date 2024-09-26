@@ -16,7 +16,7 @@ async function task() {
   //inicializar automaticamente
   await anuncioController.init();
 
-  console.log(" Fim do processamento rotina task " + lib.currentDateTimeStr());
+  console.log(" Job finished [task] " + lib.currentDateTimeStr());
 }
 
 async function init() {
