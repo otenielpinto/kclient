@@ -4,8 +4,10 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import dotenv from "dotenv";
+import os from "os";
 import { anuncioRoutes } from "./routes/anuncioRoutes.js";
 dotenv.config();
+
 
 const app = express();
 
