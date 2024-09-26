@@ -34,7 +34,7 @@ async function enviarEstoque() {
   if (!rows || !Array.isArray(rows)) return;
   try {
     await estoqueRepository.updateEstoqueMany(rows);
-  } catch (error) {}
+  } catch (error) { }
 }
 
 //isso aqui pode ser movido para outra camada

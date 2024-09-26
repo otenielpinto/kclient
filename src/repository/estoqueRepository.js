@@ -74,8 +74,9 @@ class EstoqueRepository {
   async updateEstoqueMany(items = []) {
     if (!Array.isArray(items)) return null;
     let query = {};
+    let i = 0;
     for (let item of items) {
-      //console.log(item?.id_produto);
+      //console.log(i++, item?.id_produto);
       query = { codigo: String(item?.codigo) };
       item.id_tenant = this.id_tenant;
       let body = {
