@@ -1,5 +1,6 @@
 import firebird from "node-firebird";
 import { config } from "dotenv-safe";
+import { Db, MongoBatchReExecutionError } from "mongodb";
 config();
 
 //Inspiracao
@@ -274,28 +275,38 @@ const getGenId = async (nameGenerator = "") => {
 };
 
 
-async function executeBlockSQL(cmd_sql) {
-  let execute_block_sql = `EXECUTE BLOCK
-    AS
-    BEGIN 
-      ${cmd_sql}
-    END
-  `;
+async function executeArraySQL(items) {
 
-  firebird.attach(fb5.dboptions, (err, db) => {
+  return firebird.attach(fb5.dboptions, (err, db) => {
     if (err) {
       console.log(err);
-      return;
+      return err;
+    } else {
+      db.transaction(firebird.ISOLATION_READ_COMMITTED, async function (err, transaction) {
+        if (err) {
+          console.log(err);
+          transaction.rollback();
+          return err;
+        }
+        for (const item of items) {
+          await executeQueryTrx(transaction, item.cmd_sql, []);
+        }
+        transaction.commit(function (err, result) {
+          if (err) {
+            console.log(err);
+            console.log('Lote com erro, transacao sera rollbacked');
+            transaction.rollback();
+          } else {
+            db.detach();
+            console.log('Lote executado com sucesso [OK]');
+            return result;
+          }
+        });
+      });
     }
-    db.query(execute_block_sql, [], (err, result) => {
-      db.detach();
-      if (err) {
-        console.log(err);
-      }
-    });
-  }); // firebird
+    db.detach();
+  });
 }
-
 
 //USAR O CONCEITO MANY E USAR SQL PURO SEMPRE
 
@@ -316,5 +327,5 @@ export const fb5 = {
   getNextId,
   getGenId,
 
-  executeBlockSQL
+  executeArraySQL
 };

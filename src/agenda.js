@@ -15,7 +15,6 @@ async function task() {
 
   //inicializar automaticamente
   await anuncioController.init();
-
   console.log(" Job finished [task] " + lib.currentDateTimeStr());
 }
 
