@@ -7,7 +7,7 @@ import dotenv from "dotenv";
 import os from "os";
 import { anuncioRoutes } from "./routes/anuncioRoutes.js";
 dotenv.config();
-
+process.env.TZ = "America/Sao_Paulo";
 
 const app = express();
 
@@ -38,7 +38,7 @@ app.get("/health", (req, res) => {
   };
   res.status(200).json(healthCheck);
 });
-//this for route will need for store front, also for admin dashboard 
+//this for route will need for store front, also for admin dashboard
 app.use("/api/anuncio/", anuncioRoutes);
 
 // Use express's default error handling middleware

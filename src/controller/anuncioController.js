@@ -7,6 +7,7 @@ import { TMongo } from "../infra/mongoClient.js";
 import { TStorage } from "../services/storageService.js";
 import { fbImage } from "../infra/fbImage.js";
 import path from "path";
+import { started } from "../services/systemService.js";
 
 async function obterProcessado() {
   await AnuncioHubRepository.recebeAnunciosProcessado();
@@ -15,12 +16,15 @@ async function obterProcessado() {
 
 //pego os anuncios e envio para komache hub
 async function init() {
+  let id_tenant = lib.config_id_tenant();
   await obterProcessado();
+  if (started(id_tenant, "EnviarUltimos7DiasMovto") == 0) {
+    await AnuncioHubRepository.enviarUltimosProdutosMovimentado();
+  }
 
   await AnuncioHubRepository.updateAnuncioForced();
   await enviarEstoque();
   await enviarAnunciosPendentes();
-
   await obterProcessado();
 }
 
@@ -34,7 +38,7 @@ async function enviarEstoque() {
   if (!rows || !Array.isArray(rows)) return;
   try {
     await estoqueRepository.updateEstoqueMany(rows);
-  } catch (error) { }
+  } catch (error) {}
 }
 
 //isso aqui pode ser movido para outra camada
@@ -57,7 +61,7 @@ async function enviarAnunciosPendentes() {
     if (!rows || !Array.isArray(rows)) return;
 
     for (let row of rows) {
-      //console.log(row?.id);
+      console.log(row?.id);
       await anuncio.update(row?.id, row); // Ganhar velocidade instanciando apenas 1 X
     }
   }

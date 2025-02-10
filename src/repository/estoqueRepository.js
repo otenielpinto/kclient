@@ -1,5 +1,5 @@
 //Classe tem letras maiuculoas
-
+import { TMongo } from "../infra/mongoClient.js";
 const collection = "tmp_estoque";
 
 class EstoqueRepository {

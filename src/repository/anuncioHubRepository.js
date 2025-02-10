@@ -17,6 +17,13 @@ async function updateAnuncioForced() {
   return rows;
 }
 
+async function enviarUltimosProdutosMovimentado() {
+  let cmd_sql = ` 
+  EXECUTE PROCEDURE MPK_PRODUTOMOVTO
+  `;
+  let rows = await fb5.executeQuery(cmd_sql, []);
+}
+
 //fiz separado para poder compartilhar esse repositorio
 async function getEstoqueByStatus({ status }) {
   let cmd_sql = ` 
@@ -63,14 +70,14 @@ async function recebeEstoqueProcessado() {
     if (lote.length < MAX_CMD_SQL) continue;
     try {
       await updateEstoqueSQL(lote);
-    } catch (error) { }
+    } catch (error) {}
     lote = [];
   }
 
   try {
     await updateEstoqueSQL(lote);
     lote = [];
-  } catch (error) { }
+  } catch (error) {}
 
   await estoque.updateMany(
     { status: estoqueTypes.processado, id_tenant: lib.config_id_tenant() },
@@ -99,15 +106,14 @@ async function recebeAnunciosProcessado() {
     if (lote.length < MAX_CMD_SQL) continue;
     try {
       await updateAnuncioSQL(lote);
-    } catch (error) { }
+    } catch (error) {}
     lote = [];
   }
 
   try {
     await updateAnuncioSQL(lote);
     lote = [];
-  } catch (error) { }
-
+  } catch (error) {}
 
   await anuncio.updateMany(
     { status: anuncioTypes.processado, id_tenant: lib.config_id_tenant() },
@@ -122,7 +128,10 @@ async function updateAnuncioSQL(items) {
 
   let lote = [];
   for (let item of items) {
-    lote.push({ cmd_sql: `UPDATE MPK_ANUNCIO SET STATUS=${processado} WHERE ID=${item?.id} AND STATUS=0 ;\n`, params: [] });
+    lote.push({
+      cmd_sql: `UPDATE MPK_ANUNCIO SET STATUS=${processado} WHERE ID=${item?.id} AND STATUS=0 ;\n`,
+      params: [],
+    });
   }
   await fb5.executeArraySQL(lote);
 }
@@ -134,7 +143,10 @@ async function updateEstoqueSQL(items) {
   let lote = [];
 
   for (let item of items) {
-    lote.push({ cmd_sql: `UPDATE MPK_VARIACAO SET STATUS=${processado} WHERE ID=${item?.id} AND STATUS=0 ;\n`, params: [] });
+    lote.push({
+      cmd_sql: `UPDATE MPK_VARIACAO SET STATUS=${processado} WHERE ID=${item?.id} AND STATUS=0 ;\n`,
+      params: [],
+    });
   }
   await fb5.executeArraySQL(lote);
 }
@@ -145,4 +157,5 @@ export const AnuncioHubRepository = {
   updateAnuncioForced,
   recebeAnunciosProcessado,
   recebeEstoqueProcessado,
+  enviarUltimosProdutosMovimentado,
 };
