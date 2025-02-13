@@ -9,23 +9,19 @@ import { fbImage } from "../infra/fbImage.js";
 import path from "path";
 import { started } from "../services/systemService.js";
 
-async function obterProcessado() {
+async function obterRetornoServer() {
   await AnuncioHubRepository.recebeAnunciosProcessado();
   await AnuncioHubRepository.recebeEstoqueProcessado();
 }
 
 //pego os anuncios e envio para komache hub
 async function init() {
-  let id_tenant = lib.config_id_tenant();
-  await obterProcessado();
-  if (started(id_tenant, "EnviarUltimos7DiasMovto") == 0) {
-    await AnuncioHubRepository.enviarUltimosProdutosMovimentado();
-  }
-
+  await obterRetornoServer();
+  await enviarMovimentoUltimosDias();
   await AnuncioHubRepository.updateAnuncioForced();
   await enviarEstoque();
   await enviarAnunciosPendentes();
-  await obterProcessado();
+  await obterRetornoServer();
 }
 
 async function enviarEstoque() {
@@ -39,6 +35,13 @@ async function enviarEstoque() {
   try {
     await estoqueRepository.updateEstoqueMany(rows);
   } catch (error) {}
+}
+
+async function enviarMovimentoUltimosDias() {
+  let id_tenant = lib.config_id_tenant();
+  if (started(id_tenant, "EnviarUltimos7DiasMovto") == 0) {
+    await AnuncioHubRepository.enviarUltimosProdutosMovimentado();
+  }
 }
 
 //isso aqui pode ser movido para outra camada
