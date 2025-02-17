@@ -22,6 +22,7 @@ async function enviarUltimosProdutosMovimentado() {
   EXECUTE PROCEDURE MPK_PRODUTOMOVTO
   `;
   let rows = await fb5.executeQuery(cmd_sql, []);
+  return rows;
 }
 
 //fiz separado para poder compartilhar esse repositorio

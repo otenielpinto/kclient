@@ -39,7 +39,7 @@ async function enviarEstoque() {
 
 async function enviarMovimentoUltimosDias() {
   let id_tenant = lib.config_id_tenant();
-  if (started(id_tenant, "EnviarUltimos7DiasMovto") == 0) {
+  if ((await started(id_tenant, "EnviarUltimos7DiasMovto")) == 0) {
     await AnuncioHubRepository.enviarUltimosProdutosMovimentado();
   }
 }
