@@ -5,11 +5,8 @@ import { AnuncioRepository } from "./anuncioRepository.js";
 import { anuncioTypes } from "../types/anuncioTypes.js";
 import { estoqueTypes } from "../types/estoqueTypes.js";
 import { EstoqueRepository } from "./estoqueRepository.js";
-let LISTA_OF_CATEGORIAS = [];
-const MAX_CMD_SQL = 100;
-const MAX_RECORDS_LOTE = 300; //quantidade de registros por lote
 
-async function updateAnuncioForced() {
+async function updateAnuncioForcedSQL() {
   let cmd_sql = ` 
   SELECT * FROM MPK_UPDANUNCIOFORCED
   `;
@@ -17,12 +14,23 @@ async function updateAnuncioForced() {
   return rows;
 }
 
-async function enviarUltimosProdutosMovimentado() {
+async function enviarUltimosProdutosMovimentadoSQL() {
   let cmd_sql = ` 
   EXECUTE PROCEDURE MPK_PRODUTOMOVTO
   `;
   let rows = await fb5.executeQuery(cmd_sql, []);
   return rows;
+}
+
+async function updateFilaVariacaoEntradaSQL() {
+  // Status 1 indica que o item foi enviado para fila de entrada
+  let enviado_fila = 1;
+  let cmd_sql = ` 
+  UPDATE MPK_VARIACAO SET STATUS=${enviado_fila} WHERE STATUS=0
+  `;
+
+  //Executa o lote de comandos SQL
+  return await fb5.executeQuery(cmd_sql, []);
 }
 
 //fiz separado para poder compartilhar esse repositorio
@@ -50,76 +58,6 @@ async function getAnuncios(
     id_produto,
     id_anuncio,
   ]);
-}
-
-async function recebeEstoqueProcessado() {
-  const estoque = new EstoqueRepository(
-    await TMongo.connect(),
-    lib.config_id_tenant()
-  );
-  let items = await estoque.findAllByIds({
-    status: estoqueTypes.processado,
-    id_tenant: lib.config_id_tenant(),
-  });
-
-  console.log("Recebendo estoque processados", items?.length);
-  if (!items) return;
-  let lote = [];
-
-  for (let item of items) {
-    lote.push(item);
-    if (lote.length < MAX_CMD_SQL) continue;
-    try {
-      await updateEstoqueSQL(lote);
-    } catch (error) {}
-    lote = [];
-  }
-
-  try {
-    await updateEstoqueSQL(lote);
-    lote = [];
-  } catch (error) {}
-
-  await estoque.updateMany(
-    { status: estoqueTypes.processado, id_tenant: lib.config_id_tenant() },
-    { status: estoqueTypes.concluido }
-  );
-}
-
-async function recebeAnunciosProcessado() {
-  const anuncio = new AnuncioRepository(
-    await TMongo.connect(),
-    lib.config_id_tenant()
-  );
-
-  let items = await anuncio.findAllByIds({
-    status: anuncioTypes.processado,
-    id_tenant: lib.config_id_tenant(),
-  });
-
-  console.log("Recebendo produtos processados", items?.length);
-
-  if (!items) return;
-  let lote = [];
-
-  for (let item of items) {
-    lote.push(item);
-    if (lote.length < MAX_CMD_SQL) continue;
-    try {
-      await updateAnuncioSQL(lote);
-    } catch (error) {}
-    lote = [];
-  }
-
-  try {
-    await updateAnuncioSQL(lote);
-    lote = [];
-  } catch (error) {}
-
-  await anuncio.updateMany(
-    { status: anuncioTypes.processado, id_tenant: lib.config_id_tenant() },
-    { status: anuncioTypes.concluido }
-  );
 }
 
 async function updateAnuncioSQL(items) {
@@ -155,8 +93,8 @@ async function updateEstoqueSQL(items) {
 export const AnuncioHubRepository = {
   getEstoqueByStatus,
   getAnuncios,
-  updateAnuncioForced,
-  recebeAnunciosProcessado,
-  recebeEstoqueProcessado,
-  enviarUltimosProdutosMovimentado,
+
+  enviarUltimosProdutosMovimentadoSQL,
+  updateFilaVariacaoEntradaSQL,
+  updateAnuncioForcedSQL,
 };

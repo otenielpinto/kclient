@@ -19,8 +19,8 @@ async function task() {
 }
 
 async function init() {
-  //  anuncioController.init();
-  //  return;
+  // await anuncioController.init();
+  // return;
 
   try {
     let time = process.env.CRON_JOB_TIME || 10; //tempo em minutos

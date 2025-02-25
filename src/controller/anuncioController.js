@@ -8,39 +8,50 @@ import { TStorage } from "../services/storageService.js";
 import { fbImage } from "../infra/fbImage.js";
 import path from "path";
 import { started } from "../services/systemService.js";
+import { FilaEntradaRepository } from "../repository/filaEntradaRepository.js";
 
-async function obterRetornoServer() {
-  await AnuncioHubRepository.recebeAnunciosProcessado();
-  await AnuncioHubRepository.recebeEstoqueProcessado();
+async function enviarParaFilaEntrada() {
+  let rows = await AnuncioHubRepository.getEstoqueByStatus({ status: 0 });
+  console.log("Enviando anuncios para atualizar " + rows?.length);
+
+  //Envio o lote inteiro para gravar no servidor
+  const filaEntrada = new FilaEntradaRepository(await TMongo.mongoConnect());
+  let retorno = await filaEntrada.insertMany(rows);
+
+  if (retorno?.insertedCount > 0) {
+    console.log(`${retorno.insertedCount} registros foram inseridos.`);
+
+    // Atualiza status dos produtos enviados para fila
+    await AnuncioHubRepository.updateFilaVariacaoEntradaSQL();
+  } else {
+    console.log("Nenhum registro foi inserido.");
+  }
 }
 
 //pego os anuncios e envio para komache hub
 async function init() {
-  await obterRetornoServer();
+  //Envio a movimentacao dos produtos foram sincronizados dos ultimos dias 1 x ao dia
   await enviarMovimentoUltimosDias();
-  await AnuncioHubRepository.updateAnuncioForced();
-  await enviarEstoque();
-  await enviarAnunciosPendentes();
-  await obterRetornoServer();
-}
 
-async function enviarEstoque() {
-  const estoqueRepository = new EstoqueRepository(
-    await TMongo.connect(),
-    lib.config_id_tenant()
-  );
-  let rows = await AnuncioHubRepository.getEstoqueByStatus({ status: 0 });
-
-  if (!rows || !Array.isArray(rows)) return;
   try {
-    await estoqueRepository.updateEstoqueMany(rows);
-  } catch (error) {}
+    //Isso aqui precisa ser bem rapido
+    await AnuncioHubRepository.updateAnuncioForcedSQL();
+    await enviarParaFilaEntrada();
+  } catch (error) {
+    console.log("Houve um erro durante a preparacao dados");
+  }
+
+  await enviarAnunciosPendentes();
 }
 
 async function enviarMovimentoUltimosDias() {
   let id_tenant = lib.config_id_tenant();
-  if ((await started(id_tenant, "EnviarUltimos7DiasMovto")) == 0) {
-    await AnuncioHubRepository.enviarUltimosProdutosMovimentado();
+  try {
+    if ((await started(id_tenant, "EnviarUltimos7DiasMovto")) == 0) {
+      await AnuncioHubRepository.enviarUltimosProdutosMovimentadoSQL();
+    }
+  } catch (error) {
+    console.log("O processamento retornou erro", error?.message);
   }
 }
 
@@ -52,6 +63,7 @@ async function enviarAnunciosPendentes() {
   );
   let integracoes = await MpkIntegracaoRepository.findAll();
 
+  //Todo : Mudar esse procedimento , isso aqui é muito lento ...
   for (let integracao of integracoes) {
     let rows = await AnuncioHubRepository.getAnuncios(
       integracao.id,
@@ -61,10 +73,13 @@ async function enviarAnunciosPendentes() {
       0,
       " WHERE STATUS=0 "
     );
-    if (!rows || !Array.isArray(rows)) return;
+    if (!rows || !Array.isArray(rows)) {
+      console.log("Nenhum anuncio pendente para enviar");
+      return;
+    }
 
+    //Todo : Enviar em lote , diminuir a quantidade de chamadas , latencia
     for (let row of rows) {
-      console.log(row?.id);
       await anuncio.update(row?.id, row); // Ganhar velocidade instanciando apenas 1 X
     }
   }
