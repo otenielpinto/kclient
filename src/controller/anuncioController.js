@@ -10,25 +10,6 @@ import path from "path";
 import { started } from "../services/systemService.js";
 import { FilaEntradaRepository } from "../repository/filaEntradaRepository.js";
 
-async function enviarParaFilaEntrada() {
-  let rows = await AnuncioHubRepository.getEstoqueByStatus({ status: 0 });
-  console.log("Enviando anuncios para atualizar " + rows?.length);
-
-  //Envio o lote inteiro para gravar no servidor
-  const filaEntrada = new FilaEntradaRepository(await TMongo.mongoConnect());
-  let retorno = await filaEntrada.insertMany(rows);
-
-  if (retorno?.insertedCount > 0) {
-    console.log(`${retorno.insertedCount} registros foram inseridos.`);
-
-    // Atualiza status dos produtos enviados para fila
-    await AnuncioHubRepository.updateFilaVariacaoEntradaSQL();
-  } else {
-    console.log("Nenhum registro foi inserido.");
-  }
-}
-
-//pego os anuncios e envio para komache hub
 async function init() {
   //Envio a movimentacao dos produtos foram sincronizados dos ultimos dias 1 x ao dia
   await enviarMovimentoUltimosDias();
@@ -38,9 +19,8 @@ async function init() {
     await AnuncioHubRepository.updateAnuncioForcedSQL();
     await enviarParaFilaEntrada();
   } catch (error) {
-    console.log("Houve um erro durante a preparacao dados");
+    console.log("Houve um erro durante a preparacao dados", error?.message);
   }
-
   await enviarAnunciosPendentes();
 }
 
@@ -52,6 +32,24 @@ async function enviarMovimentoUltimosDias() {
     }
   } catch (error) {
     console.log("O processamento retornou erro", error?.message);
+  }
+}
+
+async function enviarParaFilaEntrada() {
+  let rows = await AnuncioHubRepository.getEstoqueByStatus({ status: 0 });
+  console.log("Enviando anuncios para atualizar " + rows?.length);
+
+  //Envio o lote inteiro para gravar no servidor
+  const filaEntrada = new FilaEntradaRepository(await TMongo.connect());
+  let retorno = await filaEntrada.insertMany(rows);
+
+  if (retorno?.insertedCount > 0) {
+    console.log(`${retorno.insertedCount} registros foram inseridos.`);
+
+    // Atualiza status dos produtos enviados para fila
+    await AnuncioHubRepository.updateFilaVariacaoEntradaSQL();
+  } else {
+    console.log("Nenhum registro foi inserido.");
   }
 }
 
