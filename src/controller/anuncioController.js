@@ -37,6 +37,10 @@ async function enviarMovimentoUltimosDias() {
 
 async function enviarParaFilaEntrada() {
   let rows = await AnuncioHubRepository.getEstoqueByStatus({ status: 0 });
+  if (!rows || rows.length == 0) {
+    console.log("Nenhum anuncio para enviar");
+    return;
+  }
   console.log("Enviando anuncios para atualizar " + rows?.length);
 
   //Envio o lote inteiro para gravar no servidor
