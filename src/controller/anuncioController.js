@@ -8,7 +8,7 @@ import { TStorage } from "../services/storageService.js";
 import { fbImage } from "../infra/fbImage.js";
 import path from "path";
 import { started } from "../services/systemService.js";
-import { FilaEntradaRepository } from "../repository/filaEntradaRepository.js";
+import { FilaEstoqueRepository } from "../repository/FilaEstoqueRepository.js";
 
 async function init() {
   //Envio a movimentacao dos produtos foram sincronizados dos ultimos dias 1 x ao dia
@@ -40,7 +40,7 @@ async function enviarParaFilaEntrada() {
   console.log("Enviando anuncios para atualizar " + rows?.length);
 
   //Envio o lote inteiro para gravar no servidor
-  const filaEntrada = new FilaEntradaRepository(await TMongo.connect());
+  const filaEntrada = new FilaEstoqueRepository(await TMongo.connect());
   let retorno = await filaEntrada.insertMany(rows);
 
   if (retorno?.insertedCount > 0) {

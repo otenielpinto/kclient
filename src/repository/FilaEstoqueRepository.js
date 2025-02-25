@@ -1,8 +1,8 @@
 //Classe tem letras maiuculoas
 
-const collection = "tmp_fila_entrada";
+const collection = "tmp_fila_estoque";
 
-class FilaEntradaRepository {
+class FilaEstoqueRepository {
   constructor(db) {
     this.db = db;
   }
@@ -52,4 +52,4 @@ class FilaEntradaRepository {
   }
 }
 
-export { FilaEntradaRepository };
+export { FilaEstoqueRepository };
