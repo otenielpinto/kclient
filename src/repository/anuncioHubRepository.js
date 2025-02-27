@@ -1,10 +1,5 @@
 import { fb5 } from "../infra/fb5.js";
 import { lib } from "../utils/lib.js";
-import { TMongo } from "../infra/mongoClient.js";
-import { AnuncioRepository } from "./anuncioRepository.js";
-import { anuncioTypes } from "../types/anuncioTypes.js";
-import { estoqueTypes } from "../types/estoqueTypes.js";
-import { EstoqueRepository } from "./estoqueRepository.js";
 
 async function updateAnuncioForcedSQL() {
   let cmd_sql = ` 
@@ -27,6 +22,17 @@ async function updateFilaVariacaoEntradaSQL() {
   let enviado_fila = 1;
   let cmd_sql = ` 
   UPDATE MPK_VARIACAO SET STATUS=${enviado_fila} WHERE STATUS=0
+  `;
+
+  //Executa o lote de comandos SQL
+  return await fb5.executeQuery(cmd_sql, []);
+}
+
+async function updateFilaAnuncioEntradaSQL() {
+  // Status 1 indica que o item foi enviado para fila de entrada
+  let enviado_fila = 1;
+  let cmd_sql = ` 
+  UPDATE MPK_ANUNCIO SET STATUS=${enviado_fila} WHERE STATUS=0
   `;
 
   //Executa o lote de comandos SQL
@@ -96,5 +102,6 @@ export const AnuncioHubRepository = {
 
   enviarUltimosProdutosMovimentadoSQL,
   updateFilaVariacaoEntradaSQL,
+  updateFilaAnuncioEntradaSQL,
   updateAnuncioForcedSQL,
 };

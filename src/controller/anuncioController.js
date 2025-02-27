@@ -66,6 +66,7 @@ async function enviarAnunciosPendentes() {
   let integracoes = await MpkIntegracaoRepository.findAll();
 
   //Todo : Mudar esse procedimento , isso aqui é muito lento ...
+  let recordCount = 0;
   for (let integracao of integracoes) {
     let rows = await AnuncioHubRepository.getAnuncios(
       integracao.id,
@@ -84,8 +85,14 @@ async function enviarAnunciosPendentes() {
     // await anuncio.insertMany(rows);
     // continue;
     for (let row of rows) {
+      recordCount++;
       await anuncio.updateByCodigo(row.codigo, row); // Ganhar velocidade instanciando apenas 1 X
     }
+  }
+
+  if (recordCount > 0) {
+    console.log(`Foram atualizados ${recordCount} registros.`);
+    await AnuncioHubRepository.updateFilaAnuncioEntradaSQL();
   }
 }
 
