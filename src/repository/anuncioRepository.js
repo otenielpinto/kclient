@@ -12,6 +12,18 @@ class AnuncioRepository {
     this.id_tenant = id_tenant;
   }
 
+  async updateByCodigo(codigo, payload) {
+    payload.updated_at = new Date();
+    const result = await this.db
+      .collection(collection)
+      .updateOne(
+        { codigo: String(codigo) },
+        { $set: payload },
+        { upsert: true }
+      );
+    return result;
+  }
+
   async create(payload) {
     if (!payload?.id_tenant) payload.id_tenant = this.id_tenant;
     const result = await this.db.collection(collection).insertOne(payload);
@@ -49,7 +61,7 @@ class AnuncioRepository {
   }
 
   async insertMany(items) {
-    if (!Array.isArray(items)) return null;
+    if (!Array.isArray(items) || items.length === 0) return null;
     try {
       return await this.db.collection(collection).insertMany(items);
     } catch (e) {

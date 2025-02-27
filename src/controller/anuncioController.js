@@ -17,7 +17,7 @@ async function init() {
   try {
     //Isso aqui precisa ser bem rapido
     await AnuncioHubRepository.updateAnuncioForcedSQL();
-    await enviarParaFilaEntrada();
+    await enviarParaFilaEstoque();
   } catch (error) {
     console.log("Houve um erro durante a preparacao dados", error?.message);
   }
@@ -35,7 +35,7 @@ async function enviarMovimentoUltimosDias() {
   }
 }
 
-async function enviarParaFilaEntrada() {
+async function enviarParaFilaEstoque() {
   let rows = await AnuncioHubRepository.getEstoqueByStatus({ status: 0 });
   if (!rows || rows.length == 0) {
     console.log("Nenhum anuncio para enviar");
@@ -81,8 +81,10 @@ async function enviarAnunciosPendentes() {
     }
 
     //Todo : Enviar em lote , diminuir a quantidade de chamadas , latencia
+    // await anuncio.insertMany(rows);
+    // continue;
     for (let row of rows) {
-      await anuncio.update(row?.id, row); // Ganhar velocidade instanciando apenas 1 X
+      await anuncio.updateByCodigo(row.codigo, row); // Ganhar velocidade instanciando apenas 1 X
     }
   }
 }
