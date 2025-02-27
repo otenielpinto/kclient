@@ -1,7 +1,6 @@
 import { AnuncioRepository } from "../repository/anuncioRepository.js";
 import { MpkIntegracaoRepository } from "../repository/mpkIntegracaoRepository.js";
 import { AnuncioHubRepository } from "../repository/anuncioHubRepository.js";
-import { EstoqueRepository } from "../repository/estoqueRepository.js";
 import { lib } from "../utils/lib.js";
 import { TMongo } from "../infra/mongoClient.js";
 import { TStorage } from "../services/storageService.js";
@@ -92,7 +91,7 @@ async function enviarAnunciosPendentes() {
 
   if (recordCount > 0) {
     console.log(`Foram atualizados ${recordCount} registros.`);
-    await AnuncioHubRepository.updateFilaAnuncioEntradaSQL();
+    let r = await AnuncioHubRepository.updateFilaAnuncioEntradaSQL();
   }
 }
 
