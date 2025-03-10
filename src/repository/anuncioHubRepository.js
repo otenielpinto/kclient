@@ -96,6 +96,13 @@ async function updateEstoqueSQL(items) {
   await fb5.executeArraySQL(lote);
 }
 
+async function gerenciarPromocaoSQL() {
+  let cmd_sql = ` 
+  EXECUTE PROCEDURE MPK_PROMOCAO_VALIDAR_SITE
+  `;
+  return await fb5.executeQuery(cmd_sql, []);
+}
+
 export const AnuncioHubRepository = {
   getEstoqueByStatus,
   getAnuncios,
@@ -104,4 +111,6 @@ export const AnuncioHubRepository = {
   updateFilaVariacaoEntradaSQL,
   updateFilaAnuncioEntradaSQL,
   updateAnuncioForcedSQL,
+
+  gerenciarPromocaoSQL,
 };

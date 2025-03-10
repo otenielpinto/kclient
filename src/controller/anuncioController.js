@@ -9,9 +9,14 @@ import path from "path";
 import { started } from "../services/systemService.js";
 import { FilaEstoqueRepository } from "../repository/FilaEstoqueRepository.js";
 
-async function init() {
+async function tarefasDiarias() {
   //Envio a movimentacao dos produtos foram sincronizados dos ultimos dias 1 x ao dia
   await enviarMovimentoUltimosDias();
+  await gerenciarPromocao();
+}
+
+async function init() {
+  await tarefasDiarias();
 
   try {
     //Isso aqui precisa ser bem rapido
@@ -124,6 +129,17 @@ async function enviarImagensProduto(body) {
     items.push({ id_produto: imagem.id_produto });
   }
   return items;
+}
+
+async function gerenciarPromocao() {
+  let id_tenant = lib.config_id_tenant();
+  try {
+    if ((await started(id_tenant, "gerenciar_promocao")) == 1) return;
+
+    await AnuncioHubRepository.gerenciarPromocaoSQL();
+  } catch (error) {
+    console.log("O processamento retornou erro", error?.message);
+  }
 }
 
 export const anuncioController = {
