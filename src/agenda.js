@@ -27,7 +27,6 @@ async function init() {
     let time = process.env.CRON_JOB_TIME || 10; //tempo em minutos
     const job = nodeSchedule.scheduleJob(`*/${time} * * * *`, async () => {
       console.log(" Job start as " + lib.currentDateTimeStr());
-
       if (global.processandoNow == 1) {
         console.log(
           " Job can't started [processing] " + lib.currentDateTimeStr()
