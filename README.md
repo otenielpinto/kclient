@@ -1,5 +1,28 @@
 # KClient Service API HTTP Win32 NodeJS
 
+# Instalação no Windows
+
+1. Crie o diretório onde o projeto será instalado:
+
+   ```bat
+   mkdir c:\www\public
+   ```
+
+2. Baixe o projeto do GitHub:
+
+   ```bat
+   cd c:\www\public
+   git clone https://github.com/otenielpinto/kclient.git
+   ```
+
+3. Instale os pacotes necessários do Node.js:
+   ```bat
+   cd c:\www\public\kclient
+   npm install
+   ```
+
+Pronto! O projeto estará instalado e pronto para uso.
+
 Api para integracao software Super Empresarial com Komache Hub Corporate
 
 # instalar node no windows como serviço - Windows Services
