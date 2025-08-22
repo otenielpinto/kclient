@@ -5,6 +5,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import os from "os";
+import bodyParser from "body-parser";
 import { anuncioRoutes } from "./routes/anuncioRoutes.js";
 dotenv.config();
 process.env.TZ = "America/Sao_Paulo";
@@ -17,8 +18,17 @@ if (process.env.NODE_ENV !== "production") {
 
 app.use(helmet());
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: false, limit: "50mb" }));
 app.use(cors({ origin: process.env.CORS_ORIGIN }));
+app.use(bodyParser.json({ limit: "50mb" }));
+
+app.use(
+  bodyParser.urlencoded({
+    limit: "50mb",
+    extended: true,
+    parameterLimit: 50000,
+  })
+);
 
 //Minhas rotas igual eu faço com o horse
 //Minhas rotas igual eu faço com o horse

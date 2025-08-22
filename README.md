@@ -15,7 +15,7 @@ install_win32.bat
 Desinstalação do Serviço KClient
 
 ```
-install_win32.bat
+node service_uninstall.js
 ```
 
 # Requisitos
