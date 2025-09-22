@@ -57,6 +57,7 @@ async function getAnuncios(
   filter = ""
 ) {
   let cmd_sql = `SELECT * FROM MPK_GETANUNCIO(?,?,?,?,?) ${filter}`;
+
   return await fb5.executeQuery(cmd_sql, [
     id_integracao,
     id_variacao,

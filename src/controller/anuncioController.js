@@ -80,9 +80,10 @@ async function enviarAnunciosPendentes() {
       0,
       " WHERE STATUS=0 "
     );
+
     if (!rows || !Array.isArray(rows)) {
       console.log("Nenhum anuncio pendente para enviar");
-      return;
+      continue;
     }
 
     //Todo : Enviar em lote , diminuir a quantidade de chamadas , latencia

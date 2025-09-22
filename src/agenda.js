@@ -22,7 +22,6 @@ async function task() {
 
 async function init() {
   //await anuncioController.init();
-  //await MeliController.init();
   //return;
 
   try {
