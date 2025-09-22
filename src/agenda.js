@@ -2,6 +2,7 @@ import { TMongo } from "./infra/mongoClient.js";
 import { lib } from "./utils/lib.js";
 import nodeSchedule from "node-schedule";
 import { anuncioController } from "./controller/anuncioController.js";
+import { MeliController } from "./controller/meliController.js";
 global.processandoNow = 0;
 
 async function task() {
@@ -21,6 +22,7 @@ async function task() {
 
 async function init() {
   //await anuncioController.init();
+  //await MeliController.init();
   //return;
 
   try {
