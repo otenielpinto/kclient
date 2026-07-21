@@ -290,6 +290,22 @@ function config_id_marketplace() {
   return Number(process.env.CONFIG_ID_MARKETPLACE);
 }
 
+function config_enviar_ultimas_movimentacoes() {
+  return Number(process.env.CONFIG_ENVIAR_ULTIMAS_MOVIMENTACOES) === 1;
+}
+
+function config_integracoes_habilitadas() {
+  const valor = process.env.INTEGRACOES_HABILITADAS || "";
+  if (!valor) return [];
+
+  return String(valor)
+    .split(/[\n,;|]+/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((item) => Number(item))
+    .filter((item) => !Number.isNaN(item));
+}
+
 function getAlterado_apos(numero_dias = 0, hora = null) {
   let date = new Date();
   date.setDate(date.getDate() + numero_dias);
@@ -354,6 +370,8 @@ export const lib = {
   config_modulo_client,
   config_id_marketplace,
   config_id_storage,
+  config_integracoes_habilitadas,
+  config_enviar_ultimas_movimentacoes,
 
   objectToLowerCase,
   arrayToString,

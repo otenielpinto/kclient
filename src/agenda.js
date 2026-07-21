@@ -21,7 +21,9 @@ async function task() {
 }
 
 async function init() {
+  //testando
   //await anuncioController.init();
+  //console.log(" Job finished [test] " + lib.currentDateTimeStr());
   //return;
 
   try {
@@ -30,7 +32,7 @@ async function init() {
       console.log(" Job start as " + lib.currentDateTimeStr());
       if (global.processandoNow == 1) {
         console.log(
-          " Job can't started [processing] " + lib.currentDateTimeStr()
+          " Job can't started [processing] " + lib.currentDateTimeStr(),
         );
         return;
       }

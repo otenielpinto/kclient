@@ -19,24 +19,64 @@ async function enviarUltimosProdutosMovimentadoSQL() {
 
 async function updateFilaVariacaoEntradaSQL() {
   // Status 1 indica que o item foi enviado para fila de entrada
-  let enviado_fila = 1;
-  let cmd_sql = ` 
-  UPDATE MPK_VARIACAO SET STATUS=${enviado_fila} WHERE STATUS=0
-  `;
+  const novo_status = 1;
+  const integracoes = lib.config_integracoes_habilitadas?.() || [];
 
-  //Executa o lote de comandos SQL
-  return await fb5.executeQuery(cmd_sql, []);
+  if (!integracoes.length) {
+    const cmd_sql = `
+      UPDATE MPK_VARIACAO SET STATUS=${novo_status} WHERE STATUS=0
+    `;
+
+    return await fb5.executeQuery(cmd_sql, []);
+  }
+
+  const resultados = [];
+
+  for (const id_integracao of integracoes) {
+    const cmd_sql = `
+      UPDATE MPK_VARIACAO V
+      SET V.STATUS = ${novo_status}
+      WHERE V.STATUS = 0
+        AND EXISTS (
+          SELECT 1
+          FROM MPK_ANUNCIO A
+          WHERE A.ID = V.ID_ANUNCIO
+            AND A.ID_INTEGRACAO = ${id_integracao}
+        )
+    `;
+    resultados.push(await fb5.executeQuery(cmd_sql, []));
+  }
+
+  return resultados;
 }
 
 async function updateFilaAnuncioEntradaSQL() {
   // Status 1 indica que o item foi enviado para fila de entrada
-  let enviado_fila = 1;
-  let cmd_sql = ` 
-  UPDATE MPK_ANUNCIO SET STATUS=${enviado_fila} WHERE STATUS=0
-  `;
+  const novo_status = 1;
+  const integracoes = lib.config_integracoes_habilitadas?.() || [];
 
-  //Executa o lote de comandos SQL
-  return await fb5.executeQuery(cmd_sql, []);
+  if (!integracoes.length) {
+    const cmd_sql = `
+      UPDATE MPK_ANUNCIO SET STATUS=${novo_status} WHERE STATUS=0
+    `;
+
+    return await fb5.executeQuery(cmd_sql, []);
+  }
+
+  const resultados = [];
+
+  for (const id_integracao of integracoes) {
+    const cmd_sql = `
+      UPDATE MPK_ANUNCIO A
+      SET A.STATUS = ${novo_status}
+      WHERE A.STATUS = 0
+        AND A.ID_INTEGRACAO = ${id_integracao}
+    `;
+
+    resultados.push(await fb5.executeQuery(cmd_sql, []));
+  }
+
+  return resultados;
 }
 
 //fiz separado para poder compartilhar esse repositorio
@@ -54,7 +94,7 @@ async function getAnuncios(
   id_flag = 99,
   id_produto = 0,
   id_anuncio = 0,
-  filter = ""
+  filter = "",
 ) {
   let cmd_sql = `SELECT * FROM MPK_GETANUNCIO(?,?,?,?,?) ${filter}`;
 

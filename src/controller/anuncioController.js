@@ -30,6 +30,15 @@ async function init() {
 
 async function enviarMovimentoUltimosDias() {
   let id_tenant = lib.config_id_tenant();
+
+  //implementado esse controle para nao ficar repetindo no caso de clientes que tem +2 marketplace
+  if (!lib.config_enviar_ultimas_movimentacoes()) {
+    console.log(
+      "Desabilitado envio de movimentacoes dos ultimos 7 dias, para habilitar defina CONFIG_ENVIAR_ULTIMAS_MOVIMENTACOES=1 no .env",
+    );
+    return;
+  }
+
   try {
     if ((await started(id_tenant, "EnviarUltimos7DiasMovto")) == 0) {
       await AnuncioHubRepository.enviarUltimosProdutosMovimentadoSQL();
@@ -45,16 +54,45 @@ async function enviarParaFilaEstoque() {
     console.log("Nenhum anuncio para enviar");
     return;
   }
-  console.log("Enviando anuncios para atualizar " + rows?.length);
 
-  //Envio o lote inteiro para gravar no servidor
-  const filaEntrada = new FilaEstoqueRepository(await TMongo.connect());
-  let retorno = await filaEntrada.insertMany(rows);
+  const integracoes = lib.config_integracoes_habilitadas?.() || [];
 
-  if (retorno?.insertedCount > 0) {
-    console.log(`${retorno.insertedCount} registros foram inseridos.`);
+  // Sem integracoes habilitadas: mantem o lote unico original
+  if (!integracoes.length) {
+    console.log("Enviando anuncios para atualizar " + rows?.length);
+    const filaEntrada = new FilaEstoqueRepository();
+    let retorno = await filaEntrada.insertMany(rows);
 
-    // Atualiza status dos produtos enviados para fila
+    if (retorno?.insertedCount > 0) {
+      console.log(`${retorno.insertedCount} registros foram inseridos.`);
+      await AnuncioHubRepository.updateFilaVariacaoEntradaSQL();
+    } else {
+      console.log("Nenhum registro foi inserido.");
+    }
+    return;
+  }
+
+  // Itera sobre cada integracao habilitada filtrando rows por id_integracao
+  const filaEntrada = new FilaEstoqueRepository();
+  let totalInseridos = 0;
+
+  for (const id_integracao of integracoes) {
+    let lote = rows.filter(
+      (r) => Number(r.id_integracao) === Number(id_integracao),
+    );
+    if (!lote.length) continue;
+
+    console.log(
+      `Enviando ${lote.length} anuncios para integracao ${id_integracao}`,
+    );
+    let retorno = await filaEntrada.insertMany(lote);
+    if (retorno?.insertedCount > 0) {
+      totalInseridos += retorno.insertedCount;
+    }
+  }
+
+  if (totalInseridos > 0) {
+    console.log(`${totalInseridos} registros foram inseridos.`);
     await AnuncioHubRepository.updateFilaVariacaoEntradaSQL();
   } else {
     console.log("Nenhum registro foi inserido.");
@@ -63,11 +101,13 @@ async function enviarParaFilaEstoque() {
 
 //isso aqui pode ser movido para outra camada
 async function enviarAnunciosPendentes() {
-  const anuncio = new AnuncioRepository(
-    await TMongo.connect(),
-    lib.config_id_tenant()
-  );
+  const anuncio = new AnuncioRepository(lib.config_id_tenant());
   let integracoes = await MpkIntegracaoRepository.findAll();
+
+  const habilitadas = lib.config_integracoes_habilitadas?.() || [];
+  if (habilitadas.length) {
+    integracoes = integracoes.filter((i) => habilitadas.includes(Number(i.id)));
+  }
 
   //Todo : Mudar esse procedimento , isso aqui é muito lento ...
   let recordCount = 0;
@@ -78,7 +118,7 @@ async function enviarAnunciosPendentes() {
       99,
       0,
       0,
-      " WHERE STATUS=0 "
+      " WHERE STATUS=0 ",
     );
 
     if (!rows || !Array.isArray(rows)) {
